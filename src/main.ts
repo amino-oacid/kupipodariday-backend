@@ -13,7 +13,7 @@ async function bootstrap() {
     allowedHeaders: 'Content-Type,Authorization',
     credentials: true,
     methods: httpCorsMethods,
-    origin: `${httpLocalhost}:3001`,
+    origin: `${httpLocalhost}:${SERVER_PORT}`,
   });
   await app.listen(SERVER_PORT);
 }
