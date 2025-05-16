@@ -1,4 +1,4 @@
-import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateWishDto } from './dto/create-wish.dto';
 import { UpdateWishDto } from './dto/update-wish.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -112,6 +112,11 @@ export class WishesService {
 
   async copyWish(id: number, user: User): Promise<Wish> {
     const wish = await this.findOne({ where: { id } });
+
+    const isAlreadyAdded = (await this.wishesRepository.findOne({ where: { owner: { id: user.id }, name: wish.name }}))
+      ? true
+      : false;
+    if (isAlreadyAdded) throw new ConflictException('Вы уже копировали себе этот подарок');
 
     const copiedWish = this.wishesRepository.create({
       copied: 0,

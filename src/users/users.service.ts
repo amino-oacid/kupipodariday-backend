@@ -88,16 +88,28 @@ export class UsersService {
   }
 
   async updateOne(id: number, updateUserDto: UpdateUserDto): Promise<User> {
-    await this.findById(id);
+    try {
+      await this.findById(id);
 
-    if (updateUserDto.password) {
-      updateUserDto.password = await this.hashService.hash(
-        updateUserDto.password,
-      );
+      if (updateUserDto.password) {
+        updateUserDto.password = await this.hashService.hash(
+          updateUserDto.password,
+        );
+      }
+
+      await this.usersRepository.update(id, updateUserDto);
+
+      return await this.findById(id);
+    } catch (error) {
+      if (error instanceof QueryFailedError) {
+        const pgError = error.driverError as DatabaseError;
+        if (pgError.code === '23505') {
+          throw new ConflictException(
+            'Пользователь с таким email или username уже зарегистрирован',
+          );
+        }
+      }
+      throw error;
     }
-
-    await this.usersRepository.update(id, updateUserDto);
-
-    return await this.findById(id);
   }
 }
